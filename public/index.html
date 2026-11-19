@@ -1844,15 +1844,21 @@ async function doLogin() {
         return state.role === 'teacher' && state.user && state.user.name === SUPER_ADMIN;
     }
 
-    function getVisibleResults() {
+        function getVisibleResults() {
         const all = Object.values(savedResults);
+        if (isSuperAdmin()) {
+            return all; // Супер-админ видит оценки всех преподавателей
+        }
+        if (state.role === 'teacher') {
+            return all.filter(res => res.teacher === state.user.name); // Обычный преподаватель видит только свои оценки
+        }
         if (state.role === 'student') {
-    return all.filter(res =>
-        res.student &&
-        res.student.name === state.user.name &&
-        res.student.group === state.user.group
-    );
-}
+            return all.filter(res =>
+                res.student &&
+                res.student.name === state.user.name &&
+                res.student.group === state.user.group
+            );
+        }
         return all;
     }
     function renderProfileCard() {
