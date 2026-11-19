@@ -3341,13 +3341,6 @@ window.addEventListener('load', function () {
             alert('Ошибка связи с сервером при сохранении');
         }
     };
-teachersDb = data.names;
-            document.getElementById('teacherDbModal').style.display = 'none';
-            alert('База преподавателей и пароли сохранены на сервере! Всего: ' + teachersDb.length);
-        } catch (e) {
-            alert('Ошибка связи с сервером при сохранении');
-        }
-    };
 
     // <--- ВСТАВЛЯТЬ СЮДА (ФУНКЦИЯ ПОКАЗА ЖУРНАЛА) --->
     async function openLoginLogs() {
