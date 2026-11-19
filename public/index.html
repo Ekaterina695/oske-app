@@ -1225,32 +1225,28 @@ function cleanupOldResults() {
     return changed;
 }
 function loadTeachersDb() {
+    const defaults = DEFAULT_TEACHERS.map(n => String(n).trim()).filter(s => s.length > 0);
     const raw = window.__pgmkStorage.getItem('PGMK_Teachers');
-    if (raw === null) {
-        // Первый запуск — инициализируем дефолтным списком
-        const defaults = DEFAULT_TEACHERS.map(n => String(n).trim()).filter(s => s.length > 0);
-        const idx = defaults.indexOf(SUPER_ADMIN);
-        if (idx > 0) { defaults.splice(idx, 1); defaults.unshift(SUPER_ADMIN); }
-        else if (idx === -1) { defaults.unshift(SUPER_ADMIN); }
-        window.__pgmkStorage.setItem('PGMK_Teachers', JSON.stringify(defaults));
-        return defaults;
-    }
-    try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-            const result = parsed.map(s => String(s).trim()).filter(s => s.length > 0);
-            // Гарантируем, что супер-админ не потерян и стоит первым
-            const idx = result.indexOf(SUPER_ADMIN);
-            if (idx > 0) { result.splice(idx, 1); result.unshift(SUPER_ADMIN); }
-            else if (idx === -1) { result.unshift(SUPER_ADMIN); }
-            return result;
-        }
-    } catch (e) {
-        console.warn('Ошибка чтения базы преподавателей', e);
-    }
-    return [SUPER_ADMIN];
-}
+    let result = defaults.slice();
 
+    if (raw !== null) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 1) {
+                result = parsed.map(s => String(s).trim()).filter(s => s.length > 0);
+            }
+        } catch (e) {
+            console.warn('Ошибка чтения базы преподавателей', e);
+        }
+    }
+
+    const idx = result.indexOf(SUPER_ADMIN);
+    if (idx > 0) { result.splice(idx, 1); result.unshift(SUPER_ADMIN); }
+    else if (idx === -1) { result.unshift(SUPER_ADMIN); }
+
+    window.__pgmkStorage.setItem('PGMK_Teachers', JSON.stringify(result));
+    return result;
+}
 let teachersDb = loadTeachersDb();
 // ⚠️ УДАЛИТЬ старую строку:
 // window.__pgmkStorage.setItem('PGMK_Teachers', JSON.stringify(teachersDb));
