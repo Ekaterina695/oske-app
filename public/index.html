@@ -421,32 +421,6 @@ input, select, textarea {
     </div>
 
 <script>
-    // СУПЕР-ЗАГЛУШКА (перехватывает абсолютно все запросы к серверу)
-    (function() {
-        const originalFetch = window.fetch;
-        window.fetch = function(input, init) {
-            let url = '';
-            if (typeof input === 'string') url = input;
-            else if (input && typeof input === 'object' && input.url) url = input.url;
-            
-            // Если приложение пытается войти - говорим "Успешно!"
-            if (url.indexOf('/api/login') !== -1) {
-                return Promise.resolve(new Response(JSON.stringify({ success: true, token: "offline" }), { 
-                    status: 200, headers: { 'Content-Type': 'application/json' } 
-                }));
-            }
-            // Если пытается загрузить данные - отдаем пустоту
-            if (url.indexOf('/api/data') !== -1) {
-                return Promise.resolve(new Response(JSON.stringify({}), { 
-                    status: 200, headers: { 'Content-Type': 'application/json' } 
-                }));
-            }
-            // Все остальные запросы пропускаем как обычно
-            return originalFetch.apply(this, arguments);
-        };
-    })();
-</script>
-<script>
     /* ========== Серверное + локальное хранилище ========== */
     window.__pgmkStorage = (function () {
         var SERVER_KEYS = ['PGMK_Teachers', 'PGMK_Overrides', 'PGMK_Results'];
@@ -518,7 +492,33 @@ input, select, textarea {
     const SUPER_ADMIN = "Шостакович Екатерина Анатольевна";
     const TEACHER_PASSWORD = "";
     const SUPER_ADMIN_PASSWORD = "";
-    const DEFAULT_TEACHERS = [];
+    const DEFAULT_TEACHERS = [
+      "Шостакович Екатерина Анатольевна",
+      "Полякова Илона Юльяновна",
+      "Олесюк Виктория Александровна",
+      "Солоснюк Алина Павловна",
+      "Павлюковец Татьяна Васильевна",
+      "Крысь Ольга Николаевна",
+      "Козак Людмила Васильевна",
+      "Миненкова Татьяна Михайловна",
+      "Зущик Татьяна Михайловна",
+      "Лешкевич Наталья Владимировна",
+      "Веренич Георгий Васильевич",
+      "Кучинская Анна Григорьевна",
+      "Малявко Татьяна Михайловна",
+      "Садовская Светлана Михайловна",
+      "Климович Ольга Александровна",
+      "Потоцкая Софья Константиновна",
+      "Ковалевич Анна Николаевна",
+      "Видзяйло Лилиана Александровна",
+      "Корнейчук Екатерина Викторовна",
+      "Балюк Анна Васильевна",
+      "Фурса Лариса Адамовна",
+      "Кременевская Инна Олеговна",
+      "Поживилко Дина Викторовна",
+      "Головенко Елена Николаевна",
+      "Николаева Жанна Павловна"
+    ];
       const DEFAULT_APP_DATA = {
             "Лечебное дело": {
                 "Акушерство": {
@@ -1819,21 +1819,21 @@ async function doLogin() {
         const pwd = (document.getElementById('loginPassword').value || '').trim();
 
         try {
-    // --- ОТКЛЮЧАЕМ СЕРВЕР ДЛЯ ЛОКАЛЬНОГО ТЕСТА ---
-    // Мы просто делаем вид, что сервер ответил успешно!
-    const res = { ok: true };
-    const authData = { success: true };
-    
-    // if (!res.ok || !authData.success) {
-    //     alert(authData.error || "Неверный пароль или ФИО не найдено в базе!");
-    //     return;
-    // }
-    // ---------------------------------------------
-    
-} catch (error) {
-    console.log("Сервер недоступен, входим в автономном режиме");
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, password: pwd })
+            });
+            const authData = await res.json();
+            if (!res.ok || !authData.success) {
+                alert(authData.error || "Неверный пароль или ФИО не найдено в базе!");
+                return;
+            }
+        } catch (error) {
+            alert("Ошибка связи с сервером при проверке пароля.");
+            return;
+        }
 }
-    }
     state.role = role;
     state.user = { name: name, group: group };
     window.__pgmkStorage.setItem('PGMK_Role', state.role);
@@ -3345,6 +3345,11 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(console.error);
   });
 }
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
 </script>
 </body>
 </html>
