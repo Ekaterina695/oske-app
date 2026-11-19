@@ -1870,6 +1870,7 @@ async function doLogin() {
             adminButtons += `<button class="action-btn btn-archive" onclick="goTo('archive')">📂 Мой архив</button>`;
             if (isSuperAdmin()) {
                 adminButtons += `<button class="action-btn btn-teachers" onclick="openTeacherDb()">👨‍🏫 База преподавателей</button>`;
+		adminButtons += `<button class="action-btn btn-export" onclick="openLoginLogs()" style="width:100%; margin-top:6px;">📋 Журнал входов преподавателей</button>`;
             }
         }
         const roleLine = state.role === 'student'
@@ -3340,6 +3341,52 @@ window.addEventListener('load', function () {
             alert('Ошибка связи с сервером при сохранении');
         }
     };
+teachersDb = data.names;
+            document.getElementById('teacherDbModal').style.display = 'none';
+            alert('База преподавателей и пароли сохранены на сервере! Всего: ' + teachersDb.length);
+        } catch (e) {
+            alert('Ошибка связи с сервером при сохранении');
+        }
+    };
+
+    // <--- ВСТАВЛЯТЬ СЮДА (ФУНКЦИЯ ПОКАЗА ЖУРНАЛА) --->
+    async function openLoginLogs() {
+        if (!isSuperAdmin()) return;
+        var modal = document.getElementById('teacherDbModal');
+        var content = modal.querySelector('.modal-content');
+        content.style.maxWidth = '560px';
+        content.innerHTML = '<h2>Журнал входов</h2><p>Загрузка истории из базы...</p>';
+        modal.style.display = 'flex';
+
+        try {
+            var res = await fetch('/api/admin/logs');
+            var logs = await res.json();
+
+            var html = '<h2>Журнал входов преподавателей</h2>';
+            if (!Array.isArray(logs) || logs.length === 0) {
+                html += '<p style="color:#666;">Записей о входах пока нет.</p>';
+            } else {
+                html += '<div style="max-height:350px; overflow-y:auto; text-align:left; border:1px solid #eee; border-radius:8px; padding:8px; margin-bottom:15px;">';
+                logs.forEach(function (item) {
+                    var dt = new Date(item.login_time);
+                    var dateStr = isNaN(dt.getTime()) ? item.login_time : dt.toLocaleString('ru-RU');
+                    html += '<div style="padding:8px; border-bottom:1px solid #f0f0f0; font-size:13px;">' +
+                                '<b>' + escapeHtml(item.name) + '</b><br>' +
+                                '<span style="color:#666; font-size:12px;">🕒 ' + escapeHtml(dateStr) + '</span>' +
+                            '</div>';
+                });
+                html += '</div>';
+            }
+            html += '<button type="button" class="submit-btn" style="background:#ccc; color:#333;" onclick="document.getElementById(\'teacherDbModal\').style.display=\'none\'">Закрыть</button>';
+            content.innerHTML = html;
+        } catch (e) {
+            content.innerHTML = '<h2>Ошибка</h2><p>Не удалось загрузить журнал с сервера.</p>' +
+                '<button type="button" class="submit-btn" style="background:#ccc; color:#333;" onclick="document.getElementById(\'teacherDbModal\').style.display=\'none\'">Закрыть</button>';
+        }
+    }
+</script>
+<script>
+if ('serviceWorker' in navigator) {
 </script>
 <script>
 if ('serviceWorker' in navigator) {
