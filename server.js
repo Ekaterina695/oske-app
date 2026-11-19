@@ -64,7 +64,11 @@ async function initDatabase() {
     name TEXT PRIMARY KEY,
     password TEXT NOT NULL
   )`);
-
+  await db.execute(`CREATE TABLE IF NOT EXISTS login_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    login_time TEXT NOT NULL
+  )`);
   // Записываем пароль супер-админа по умолчанию
   await db.execute({
     sql: `INSERT OR IGNORE INTO teacher_passwords (name, password) VALUES (?, ?)`,
@@ -127,10 +131,24 @@ app.post('/api/login', async (req, res) => {
     if (password !== expected) {
       return res.status(401).json({ error: 'Неверный пароль!' });
     }
+await db.execute({
+      sql: "INSERT INTO login_logs (name, login_time) VALUES (?, ?)",
+      args: [name, new Date().toISOString()]
+    });
     return res.json({ success: true, isSuperAdmin: (name === SUPER_ADMIN_NAME), name: name });
   } catch (err) {
     console.error('Ошибка /api/login:', err);
     res.status(500).json({ error: 'Ошибка сервера при проверке входа' });
+  }
+});
+
+// Получить журнал входов преподавателей (для супер-админа)
+app.get('/api/admin/logs', async (req, res) => {
+  try {
+    const result = await db.execute("SELECT name, login_time FROM login_logs ORDER BY id DESC LIMIT 200");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
