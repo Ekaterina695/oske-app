@@ -2027,13 +2027,13 @@ async function doLogin() {
         });
     }
 
-    function canAccessResult(res) {
-        if (!res) return false;
-        if (state.role === 'teacher') return res.teacher === state.user.name;
-        if (state.role === 'student') return res.student && res.student.name === state.user.name;
-        return true;
-    }
-
+function canAccessResult(res) {
+    if (!res) return false;
+    if (isSuperAdmin()) return true; // Разрешаем супер-админу просмотр и удаление любых записей
+    if (state.role === 'teacher') return res.teacher === state.user.name;
+    if (state.role === 'student') return res.student && res.student.name === state.user.name;
+    return true;
+}
     function viewArchiveDetail(resultId) {
         const res = savedResults[resultId];
         if (!res) return;
